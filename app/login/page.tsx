@@ -8,7 +8,7 @@ import { showSuccess, showError } from '../components/Toastr';
 interface FormValues {
   email: string;
   password: string;
-  loginAs: 'coach' | 'player';
+  loginAs: 'coach' | 'player' | 'enterprise';
 }
 
 export default function Login() {
@@ -73,9 +73,15 @@ export default function Login() {
       // Redirect based on session type
       if (session.user.type === 'coach') {
         window.location.href = '/coach/dashboard';
-      } else if (session.user.type === 'player') {
+      } 
+      else if (session.user.type === 'player') {
         window.location.href = '/dashboard';
-      } else if (!session.user.name) {
+      }
+      else if (session.user.type === 'enterprise') {
+        
+        window.location.href = '/enterprise/dashboard';
+      }
+       else if (!session.user.name) {
         window.location.href = '/completeprofile';
       }
     }
@@ -102,7 +108,7 @@ export default function Login() {
                   />
                   <span className="ml-2">Coach</span>
                 </label>
-                <label className="inline-flex items-center">
+                <label className="inline-flex items-center mr-4">
                   <input
                     type="radio"
                     name="loginAs"
@@ -113,6 +119,18 @@ export default function Login() {
                     className="form-radio"
                   />
                   <span className="ml-2">Player</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="loginAs"
+                    value="enterprise"
+                    checked={formValues.loginAs === 'enterprise'}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className="form-radio"
+                  />
+                  <span className="ml-2">Enterprise</span>
                 </label>
               </div>
               <div className="mb-4">

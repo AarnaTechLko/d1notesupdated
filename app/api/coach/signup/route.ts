@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { db } from '../../../../lib/db';
-import { coaches } from '../../../../lib/schema';
+import { coaches, otps } from '../../../../lib/schema';
 import debug from 'debug';
 import jwt from 'jsonwebtoken';
 import { SECRET_KEY } from '@/lib/constants';
-import { eq,isNotNull } from 'drizzle-orm';
+import { eq,isNotNull,and, between, lt,ilike } from 'drizzle-orm';
+import { sendEmail } from '@/lib/helpers';
 
 export async function POST(req: NextRequest) {
   const logError = debug('app:error');
@@ -16,13 +17,27 @@ export async function POST(req: NextRequest) {
     
     // Parse the form data
     const body = await req.json();
-    const { email, password } = body;
+    const { email, password, otp } = body;
 
     if (!email || !password) {
       logError('Missing required fields');
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
-   
+
+    
+  const existingOtp = await db
+  .select()
+  .from(otps)
+  .where(and(
+    eq(otps.email, email),
+    eq(otps.otp, otp)
+  ))
+  .limit(1)
+  .execute();
+  if(existingOtp.length < 1)
+    {
+      return NextResponse.json({ message: 'OTP Do not match. Enter valid OTP.' }, { status: 400 });
+    }
     const hashedPassword = await hash(password, 10);
     
     const insertedUser = await db.insert(coaches).values({
@@ -33,7 +48,12 @@ export async function POST(req: NextRequest) {
       
     }).returning();
     
-    
+    const emailResult = await sendEmail({
+      to: email,
+      subject: "D1 NOTES Coach Registration",
+      text: "D1 NOTES Coach Registration",
+      html: `<p>Dear Coach! Your account creation as a Coach on D1 NOTES has been started. </p><p>Please complete your profile in next step to enjoy the evaluation from best coaches.</p>`,
+  });
     // Return the response with the generated token
     return NextResponse.json({ message:"Profile Completed"}, { status: 200 });
 
@@ -104,11 +124,50 @@ export async function PUT(req: NextRequest) {
 }
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const search = searchParams.get('search') || ''; // Keep the search as a string
+  const country = searchParams.get('country') || ''; // Keep the search as a string
+  const state = searchParams.get('state') || '';  
+  const city = searchParams.get('city') || '';  
+  const amount = searchParams.get('amount') || '';  
+  const rating = searchParams.get('rating') || '';  
 
   try {
-    // Fetch the coach list from the database
-    const coachlist = await db
+    const conditions = [isNotNull(coaches.firstName)];
+    
+    
+    if (country) {
+      conditions.push(eq(coaches.country, country));
+    }
+    if (state) {
+      conditions.push(eq(coaches.state, state));
+    }
+    if (city) {
+      conditions.push(ilike(coaches.city, city));
+    }
+ 
+    if (rating) {
+      if(rating=='0')
+      {
+        
+        conditions.push(between(coaches.rating, 0, 5));
+      }
+      else{
+        conditions.push(eq(coaches.rating, Number(rating)));
+      }
+      
+    }
+      
+    if (amount) {
+      if (amount=='0') {
+      conditions.push(between(coaches.expectedCharge, "0", "1000"));
+      }
+      else{
+        conditions.push(lt(coaches.expectedCharge, amount));
+      }
+    }
+     
+
+
+    let query =  db
       .select({
         firstName: coaches.firstName,
         lastName: coaches.lastName,
@@ -116,16 +175,29 @@ export async function GET(req: NextRequest) {
         clubName:coaches.clubName,
         slug:coaches.slug,
         rating:coaches.rating,
+        city:coaches.city,
+        country:coaches.country,
+        phoneNumber:coaches.phoneNumber,
+        gender:coaches.gender,
+        sport:coaches.sport,
+        qualifications:coaches.qualifications,
       })
       .from(coaches)
-      .where(isNotNull(coaches.firstName))
-      .execute();
+      .where(and(...conditions))
+      const coachlist =await query.execute();
+
       const formattedCoachList = coachlist.map(coach => ({
         firstName: coach.firstName,
         lastName: coach.lastName,
         clubName:coach.clubName,
         slug:coach.slug,
         rating:coach.rating,
+        city:coach.city,
+        country:coach.country,
+        phoneNumber:coach.phoneNumber,
+        gender:coach.gender,
+        sport:coach.sport,
+        qualifications:coach.qualifications,
         image: coach.image ? `${coach.image}` : null,
       }));
     // Return the coach list as a JSON response

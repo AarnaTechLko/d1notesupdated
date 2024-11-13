@@ -12,6 +12,7 @@ import {
   pgEnum,
   integer // Ensure integer is imported from drizzle-orm/pg-core
 } from "drizzle-orm/pg-core";
+import { number } from "zod";
 
 // Users table
 export const users = pgTable(
@@ -145,4 +146,49 @@ export const evaluationResults = pgTable('evaluation_results', {
   physicalScores: text('physicalScores').notNull(), // JSON field for physical scores
   tacticalScores: text('tacticalScores').notNull(), // JSON field for tactical scores
   technicalScores: text('technicalScores').notNull(), // JSON field for technical scores
+});
+
+export const otps = pgTable('otps', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  otp: text('otp').notNull()
+});
+
+export const enterprises=pgTable('enterprises', {
+  id: serial('id').primaryKey(),
+  organizationName: text('organizationName').notNull(),
+  contactPerson: text('contactPerson').notNull(),
+  package_id: integer('package_id'),
+  email: text('email').notNull(),
+  mobileNumber: text('mobileNumber'),
+  address: text('address'),
+  country: text('country'),
+  state: text('state'),
+  city: text('city'),
+  logo: text('logo'),
+  affiliationDocs: text('affiliationDocs'),
+  slug: text('slug'),
+  password: text('password').notNull(),
+  createdAt: timestamp('createdAt').defaultNow().notNull(),
+});
+
+export const packages=pgTable('packages', {
+  id: serial('id').primaryKey(),
+  packageName: text('packageName').notNull(),
+  amount: text('amount').notNull(),
+  noOfLicnese: integer('noOfLicnese'),
+  details: text('details').notNull(),
+  status:text('status').notNull(),
+  createdAt: timestamp('createdAt').defaultNow().notNull(),
+});
+
+export const orderHistory=pgTable('orderHistory', {
+  id: serial('id').primaryKey(),
+  enterprise_id: integer('enterprise_id').notNull(),
+  package_id: integer('package_id').notNull(),
+  amount: text('amount').notNull(),
+  description: text('description').notNull(),
+  status:text('status').notNull(),
+  payment_info:text('payment_info'),
+  createdAt: timestamp('createdAt').defaultNow().notNull(),
 });

@@ -10,46 +10,96 @@ import Filters from '../components/Filters';
 interface Profile {
   id: number;
   firstName: string;
+  city: string;
+  email: string;
   lastName: string;
   organization: string;
   image: string | null;
   rating: number;
   slug: string;
   clubName: string;
+  gender: string;
+  sport: string;
+  phoneNumber: string;
+  qualifications: string;
   expectedCharge: number;
 }
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [filters, setFilters] = useState({
+    country: '',
+    state: '',
+    city: '',
+    amount: 0,
+    rating: null as number | null,
+  });
 
   // Fetch coach data from API
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await fetch('/api/coach/signup'); // Replace with your API endpoint
+        const queryParams = new URLSearchParams({
+          country: filters.country || '',
+          state: filters.state || '',
+          city: filters.city || '',
+          amount: filters.amount.toString(),
+          rating: filters.rating?.toString() || '',
+        }).toString();
+
+        const response = await fetch(`/api/coach/signup?${queryParams}`); // Replace with your API endpoint
         if (!response.ok) {
           throw new Error('Failed to fetch profiles');
         }
         const data = await response.json();
+        console.log(data);
         setProfiles(data);
       } catch (err) {
-        setError("Some issue occurred.");
+        setError('Some issue occurred.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfiles();
-  }, []);
+  }, [filters]); // Fetch profiles whenever the filters change
 
-  // Filter profiles based on the search query
-  const filteredProfiles = profiles.filter((profile) => {
-    const fullName = `${profile.firstName} ${profile.lastName}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase());
-  });
+  useEffect(() => {
+    setFilteredProfiles(
+      profiles.filter((profile) => {
+        const fullName = `${profile.firstName} ${profile.lastName}`.toLowerCase();
+        const email = (profile.email || '').toLowerCase();
+        const city = (profile.city || '').toLowerCase(); // Example additional field
+        const clubName = (profile.clubName || '').toLowerCase(); // Example additional field
+        const phoneNumber = (profile.phoneNumber || '').toLowerCase(); // Example additional field
+        const gender = (profile.gender || '').toLowerCase(); // Example additional field
+        const sport = (profile.sport || '').toLowerCase(); // Example additional field
+        const qualifications = (profile.qualifications || '').toLowerCase(); // Example additional field
+        const rating = String(profile.rating || ''); // Example additional field
+    
+        return (
+          fullName.includes(searchQuery.toLowerCase()) ||
+          email.includes(searchQuery.toLowerCase()) ||
+          city.includes(searchQuery.toLowerCase()) ||
+          clubName.includes(searchQuery.toLowerCase()) ||
+          qualifications.includes(searchQuery.toLowerCase()) ||
+          sport.includes(searchQuery.toLowerCase()) ||
+          rating.includes(searchQuery) || // You can keep adding more fields as needed
+          phoneNumber.includes(searchQuery) // You can keep adding more fields as needed
+        );
+      })
+    );
+  }, [searchQuery, profiles]); // Filter profiles based on search query
+
+  const handleFilterChange = (newFilters: { country: string; state: string; city: string; amount: number; rating: number | null }) => {
+    setFilters(newFilters);
+    console.log(newFilters);
+  };
 
   if (loading) {
     return <Loading />;
@@ -63,8 +113,8 @@ const Home = () => {
 
       <div className="container-fluid">
         <div className="flex flex-col md:flex-row">
-        <div className="w-full md:w-1/4 p-4">
-            <Filters />
+          <div className="w-full md:w-1/4 p-4">
+            <Filters onFilterChange={handleFilterChange} />
           </div>
           <div className="w-full md:w-3/4 p-4">
             <SearchFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -84,9 +134,6 @@ const Home = () => {
               ))}
             </div>
           </div>
-
-          {/* Right Side - Filters */}
-        
         </div>
       </div>
     </>

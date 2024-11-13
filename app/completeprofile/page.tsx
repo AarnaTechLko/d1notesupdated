@@ -581,7 +581,7 @@ export default function Register() {
             onChange={handleChange}
           >
             <option value="">Select</option>
-            <option value="Freshman">United States of America</option>
+            <option value="United States of America">United States of America</option>
            
           </select>
           

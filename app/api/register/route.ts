@@ -3,9 +3,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { db } from '../../../lib/db';
-import { users } from '../../../lib/schema'
+import { users, otps } from '../../../lib/schema'
 import debug from 'debug';
-import { eq } from 'drizzle-orm';
+import { eq, and, gt } from 'drizzle-orm';
 import { sendEmail } from '@/lib/helpers';
  
 import { SECRET_KEY } from '@/lib/constants';
@@ -18,11 +18,26 @@ export async function POST(req: NextRequest) {
 
   const logError = debug('app:error');
   const body = await req.json();
-  const { email, password } = body;
+  const { email, password, otp } = body;
   if (!email || !password) {
     return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
   }
 
+  const existingOtp = await db
+  .select()
+  .from(otps)
+  .where(and(
+    eq(otps.email, email), 
+    eq(otps.otp, otp)
+  ))
+  .limit(1)
+  .execute();
+
+  if(existingOtp.length < 1)
+  {
+    return NextResponse.json({ message: 'OTP Do not match. Enter valid OTP.' }, { status: 400 });
+  }
+    
   const hashedPassword = await hash(password, 10);
 
   try {
