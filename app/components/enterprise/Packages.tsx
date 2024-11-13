@@ -72,7 +72,7 @@ interface PackageData {
             className="bg-blue-500 text-white p-2 rounded-lg mt-4 w-full"
           >
             Buy Now
-          </button>
+          </button> 
           </div>
           
         ))}
