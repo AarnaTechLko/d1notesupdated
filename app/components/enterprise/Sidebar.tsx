@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FaPen, FaClipboardList, FaCog, FaSignOutAlt, FaDashcube, FaDollarSign, FaBars, FaFacebookMessenger, FaCompressAlt } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 import { useSession, signOut } from 'next-auth/react';
-
+import CertificateIcon from '@mui/icons-material/WorkspacePremium';
 const Sidebar: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isEvaluationListOpen, setIsEvaluationListOpen] = useState(false);
@@ -51,6 +51,14 @@ const Sidebar: React.FC = () => {
               <span>Order History</span>
             </a>
           </li>
+          <li className="hover:bg-gray-700 rounded transition duration-200">
+            <a href="/enterprise/licenses" className="flex items-center space-x-2 p-2">
+            <CertificateIcon className='text-xl'/>
+             
+              <span>Licences</span>
+            </a>
+          </li>
+
           <li className="hover:bg-gray-700 rounded transition duration-200">
             <a href="/payment-history" className="flex items-center space-x-2 p-2">
             

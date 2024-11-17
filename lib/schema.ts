@@ -39,6 +39,7 @@ export const users = pgTable(
     league:text("league"),
     countrycode:text("countrycode"),
     password: text("password").notNull(),
+    enterprise_id: text("enterprise_id"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
   (users) => {
@@ -65,6 +66,7 @@ export const coaches = pgTable(
     expectedCharge: decimal("expectedCharge", { precision: 10, scale: 2 }), // Decimal type with precision and scale
     image: text("image"),
     slug: text("slug"),
+    enterprise_id: text("enterprise_id"),
     country:varchar("country"),
     state:varchar("state"),
     city:varchar("city"),
@@ -190,5 +192,15 @@ export const orderHistory=pgTable('orderHistory', {
   description: text('description').notNull(),
   status:text('status').notNull(),
   payment_info:text('payment_info'),
+  createdAt: timestamp('createdAt').defaultNow().notNull(),
+});
+
+export const licenses=pgTable('licenses', {
+  id: serial('id').primaryKey(),
+  enterprise_id: integer('enterprise_id').notNull(),
+  package_id: integer('package_id').notNull(),
+  payment_info:text('payment_info'),
+  licenseKey: text('licenseKey').notNull(),
+  status:text('status').notNull(),
   createdAt: timestamp('createdAt').defaultNow().notNull(),
 });

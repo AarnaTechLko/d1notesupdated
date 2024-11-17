@@ -4,12 +4,13 @@ import "../../globals.css";
 import Sidebar from "../../components/enterprise/Sidebar";
 import { getSession, useSession, signIn } from "next-auth/react";
 import Packages from "@/app/components/enterprise/Packages";
+import DashboardContent from "@/app/components/enterprise/Dashboard";
 
 
 const Dashboard: React.FC = () => {
     const { data: sessions } = useSession();
     const [packageId, setPackageId]=useState<number>();
-    const [showPackages, setShowPackages]=useState(false);
+    const [showPackages, setShowPackages]=useState<string>('No');
     const fetchPackages = async () => {
         try {
           // Fetch session to get enterprise_id
@@ -34,8 +35,13 @@ const Dashboard: React.FC = () => {
 
           const data = await response.json();
           setPackageId(data);
-          if(packageId){
-            setShowPackages(true);
+          if(data){
+            
+            setShowPackages("No");
+          }
+          else{
+             
+            setShowPackages("Yes");
           }
         } catch (error) {
           console.error('Error fetching packages:', error);
@@ -50,10 +56,10 @@ const Dashboard: React.FC = () => {
       <Sidebar />
       <main className="flex-grow bg-gray-100 p-4 overflow-x-auto">
         <div className="bg-white shadow-md rounded-lg p-6 ">
-        {showPackages === true ? (
+        {showPackages === 'Yes' ? (
   <Packages />
 ) : (
-  <p>No valid package ID</p> // Display a message if packageId is not a number
+   <DashboardContent/>
 )}
           
         </div>

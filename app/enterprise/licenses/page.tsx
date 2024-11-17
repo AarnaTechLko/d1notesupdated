@@ -6,10 +6,9 @@ import Sidebar from '../../components/enterprise/Sidebar';
 // Define the type for the data
 interface Order {
   id: number;
-  orderDate: string;
-  packageName: string;
-  description: string;
-  amount: number;
+  licenseKey: string;
+  status: string;
+ 
 }
 
 const Home: React.FC = () => {
@@ -19,7 +18,7 @@ const Home: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const limit = 10; // Set the number of items per page
   const { data: session } = useSession();
-
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   useEffect(() => {
     const fetchOrders = async () => {
       const session = await getSession();
@@ -30,7 +29,7 @@ const Home: React.FC = () => {
         return;
       }
 
-      const response = await fetch('/api/enterprise/orderhistory', {
+      const response = await fetch('/api/enterprise/licenses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,8 +45,8 @@ const Home: React.FC = () => {
       }
 
       const data = await response.json();
-      setOrders(data.orderWithPackageDetails);
-      setFilteredOrders(data.orderWithPackageDetails); // Initially show all orders
+      setOrders(data.licenseslist);
+      setFilteredOrders(data.licenseslist); // Initially show all orders
     };
 
     fetchOrders();
@@ -56,8 +55,8 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (search) {
       const filtered = orders.filter((order) =>
-        order.packageName.toLowerCase().includes(search.toLowerCase()) ||
-        order.amount.toString().includes(search.toLowerCase())
+        order.licenseKey.toLowerCase().includes(search.toLowerCase()) ||
+        order.status.toString().includes(search.toLowerCase())
       );
       setFilteredOrders(filtered);
     } else {
@@ -98,28 +97,45 @@ const Home: React.FC = () => {
             <table className="w-full text-sm text-left text-gray-700">
               <thead>
                 <tr>
-                  <th>Order Date</th>
-                  <th>Package Name</th>
-                  <th>Description</th>
-                  <th>Amount Paid</th>
+                  <th>Sr. No.</th>
+                  <th>License Key</th>
+                  <th>Status</th>
+                  <th>Copy</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedOrders.length > 0 ? (
-                  paginatedOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td>{order.orderDate}</td>
-                      <td>{order.packageName}</td>
-                      <td>{order.description}</td>
-                      <td>{order.amount}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4}>No orders found</td>
-                  </tr>
-                )}
-              </tbody>
+  {paginatedOrders.length > 0 ? (
+    paginatedOrders.map((order, index) => (
+      <tr key={order.id}>
+        {/* Serial Number Column */}
+        <td>{(currentPage - 1) * limit + index + 1}</td>
+        
+        {/* Other Columns */}
+       
+        <td>{order.licenseKey}</td>
+        <td>{order.status}</td>
+        
+        {/* Copy-to-Clipboard Column */}
+        <td>
+        <button
+            onClick={() => {
+              navigator.clipboard.writeText(order.licenseKey);
+              setCopiedIndex(index); // Set the copied index
+              setTimeout(() => setCopiedIndex(null), 2000); // Reset after 2 seconds
+            }}
+            className="text-blue-500 hover:underline"
+          >
+            {copiedIndex === index ? "Copied" : "Copy"}
+          </button>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={5}>No License Key found</td>
+    </tr>
+  )}
+</tbody>
             </table>
             {/* Pagination Controls */}
             <div className="flex justify-between items-center mt-4">
